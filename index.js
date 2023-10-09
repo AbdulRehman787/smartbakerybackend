@@ -105,7 +105,7 @@ app.post("/login", (req, res) => {
       if (result.length > 0) {
         res.send(result);
       } else {
-        res.send({ message: "Wrong username / password combination" });
+        res.send("Wrong username / password combination");
       }
     }
   );  
@@ -284,6 +284,15 @@ app.post("/documents", (req, res) => {
     console.log("data was add");
   });
 });
+app.get("/documents", (req, res) => {
+  db.query("SELECT * FROM `get_documents` ", (err, result, fields) => {
+    if (err) {
+      throw err;
+    } else {
+      res.send(result);
+    }
+  });
+});
 
 app.post("/add-product", (req, res) => {
   const { name, price, sell_price, productStatus, stock, image_url } = req.body;
@@ -314,7 +323,7 @@ app.get("/add-product", (req, res) => {
 
 app.post("/order", (req, res) => {
   const sql =
-    "INSERT INTO `orderspage`(`user_name`, `user_email`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `user_location`, `quantity`, `user_phoneno`, `user_id`,`orderStatus`,`attribute_name`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+    "INSERT INTO `orderspage`(`user_name`, `user_email`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `user_location`, `quantity`, `user_phoneno`, `user_id`, `orderStatus`,  `attribute_name`)  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
   const values = [
     req.body.user_name,
     req.body.user_email,
@@ -350,7 +359,7 @@ app.get("/order", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello World ");
+  res.send("Hello World1");
 });
 
 app.post("/updateData", (req, res) => {
