@@ -30,26 +30,43 @@ db.connect(function (err) {
   }
   console.log("Database connected");
 });
-
 app.post("/register", (req, res) => {
-  const sql =
-    "INSERT INTO `signup`(`name`, `email`, `phoneno`, `address`, `password`)  VALUES (?,?,?,?,?)";
-  const values = [
-    req.body.name,
-    req.body.email,
-    req.body.phoneno,
-    req.body.address,
-    req.body.password,
-  ];
-  db.query(sql, values, (err) => {
-    if (err) {
-      console.log(err);
-    }
+  const email = req.body.email;
+  const checkEmailQuery = "SELECT * FROM `signup` WHERE email = ?";
   
-    return res.status(200).json("User registered successfully");
-
+  db.query(checkEmailQuery, [email], (err, result) => {
+    if (err) {
+      console.error("Error checking email registration:", err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+    
+    if (result.length > 0) {
+      // Email is already registered
+      return res.status(400).json({ message: "Email is already registered" });
+    } else {
+      // Email is not registered; proceed with registration
+      const sql =
+        "INSERT INTO `signup`(`name`, `email`, `phoneno`, `address`, `password`) VALUES (?,?,?,?,?)";
+      const values = [
+        req.body.name,
+        req.body.email,
+        req.body.phoneno,
+        req.body.address,
+        req.body.password,
+      ];
+      
+      db.query(sql, values, (err) => {
+        if (err) {
+          console.error("Error registering user:", err);
+          return res.status(500).json({ message: "Internal server error" });
+        }
+        
+        return res.status(200).json({ message: "User registered successfully" });
+      });
+    }
   });
 });
+
 // user signin code start end point
 
 // Active  user account start point
