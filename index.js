@@ -325,9 +325,15 @@ app.post("/order", (req, res) => {
   // Assuming req.body.products is an array of products with name and quantity properties
   const products = req.body.products;
 
+  if (!Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({ error: "Invalid products array" });
+  }
+
   // Prepare the SQL query
   const sql =
     "INSERT INTO `orderspage`(`user_name`, `user_email`, `user_location`, `user_phoneno`, `user_id`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `orderStatus`,  `attribute_name`)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+  const successResponses = [];
 
   // Use a loop to insert each product into the database
   products.forEach(product => {
@@ -352,10 +358,16 @@ app.post("/order", (req, res) => {
         res.status(500).json({ error: "Your order is not Confirmed" });
         return; // Exit the loop if there's an error
       }
+
+      // Push a success response for this product
+      successResponses.push({ message: "Product added successfully" });
+      
+      // If all products are processed, return success
+      if (successResponses.length === products.length) {
+        res.json({ message: "Your Order is being processed" });
+      }
     });
   });
-
-  res.json({ message: "Your Order is being processed" });
 });
 
 app.get("/order", (req, res) => {
