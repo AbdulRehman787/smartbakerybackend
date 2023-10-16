@@ -322,39 +322,48 @@ app.get("/add-product", (req, res) => {
 });
 
 
-app.post("/order", (req, res) => {
-  // Assuming req.body.products is an array of products with name and quantity properties
-  const products = req.body.products;
+app.post('/orders', (req, res) => {
+  const {
+    attribute_name,
+    orderStatus,
+    paymentStatus,
+    product_image_url,
+    product_price,
+    products_name,
+    quantity,
+    user_email,
+    user_id,
+    user_location,
+    user_name,
+    user_phoneno
+  } = req.body;
 
-  if (!products || !Array.isArray(products) || products.length === 0) {
-    return res.status(400).json({ error: "Invalid or empty products array" });
-  }
+  const query = `
+    INSERT INTO orderspage
+    (attribute_name, orderStatus, paymentStatus, product_image_url, product_price, products_name, quantity, user_email, user_id, user_location, user_name, user_phoneno)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  // Prepare the SQL query
-  const sql =
-    "INSERT INTO `orderspage`(`user_name`, `user_email`, `user_location`, `user_phoneno`, `user_id`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `orderStatus`, `attribute_name`) VALUES ?";
-  
-  const values = products.map(product => [
-    req.body.user_name,
-    req.body.user_email,
-    req.body.user_location,
-    req.body.user_phoneno,
-    req.body.user_id,
-    product.name,
-    product.image_url,
-    product.displayedPrice,
-    'Paid',
-    'Pending',
-    2,
-  ]);
+  const values = [
+    attribute_name,
+    orderStatus,
+    paymentStatus,
+    JSON.stringify(product_image_url),
+    JSON.stringify(product_price),
+    JSON.stringify(products_name),
+    JSON.stringify(quantity),
+    user_email,
+    user_id,
+    user_location,
+    user_name,
+    user_phoneno
+  ];
 
-  // Execute the SQL query to insert all products at once
-  db.query(sql, [values], (err, result) => {
+  db.query(query, values, (err, results) => {
     if (err) {
-      console.log(err);
-      res.status(500).json({ error: "Your order is not Confirmed" });
+      console.error('Error inserting data: ' + err);
+      res.status(500).json({ message: 'Error inserting data' });
     } else {
-      res.json({ message: "Your Order is being processed" });
+      res.status(200).json({ message: 'Data inserted successfully' });
     }
   });
 });
