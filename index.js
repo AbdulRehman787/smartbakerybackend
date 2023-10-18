@@ -374,12 +374,13 @@ app.post("/order", (req, res) => {
 
 
 app.post("/seller",(req,res)=>{
-  const sql ="INSERT INTO `seller`(`seller_name`, `seller_email`, `seller_phoneno`, `seller_location`) VALUES (?,?,?,?)";
+  const sql ="INSERT INTO `seller`(`seller_name`, `seller_email`, `seller_phoneno`, `seller_location`, `seller_city`) VALUES (?,?,?,?,?)";
   const values=[
     req.body.seller_name,
     req.body.seller_email,
     req.body.seller_phoneno,
     req.body.seller_location,
+    req.body.seller_city,
   ]
   db.query(sql,values,(err, result) => {
     if (err) {
