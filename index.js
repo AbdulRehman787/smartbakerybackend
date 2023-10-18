@@ -320,55 +320,87 @@ app.get("/add-product", (req, res) => {
     }
   });
 });
+app.post("/order", (req, res) => {
+  // Assuming req.body.products is an array of products with name and quantity properties
+  const products = req.body.products;
+  console.log(products)
 
+  if (!products || !Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty products array" });
+  }
 
-app.post('/orders', (req, res) => {
-  const {
-    attribute_name,
-    orderStatus,
-    paymentStatus,
-    product_image_url,
-    product_price,
-    products_name,
-    quantity,
-    user_email,
-    user_id,
-    user_location,
-    user_name,
-    user_phoneno
-  } = req.body;
+  // Prepare the SQL query
+  const sql =
+    "INSERT INTO `orderspage`(`user_name`, `user_email`, `user_location`, `user_phoneno`, `user_id`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `orderStatus`,  `attribute_name`)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  const query = `
-    INSERT INTO orderspage
-    (attribute_name, orderStatus, paymentStatus, product_image_url, product_price, products_name, quantity, user_email, user_id, user_location, user_name, user_phoneno)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const successResponses = [];
+  const errorOccurred = false;
 
-  const values = [
-    attribute_name,
-    orderStatus,
-    paymentStatus,
-    JSON.stringify(product_image_url),
-    JSON.stringify(product_price),
-    JSON.stringify(products_name),
-    JSON.stringify(quantity),
-    user_email,
-    user_id,
-    user_location,
-    user_name,
-    user_phoneno
-  ];
+ 
+  products.forEach(product => {
+    const values = [
+      req.body.user_name,
+      req.body.user_email,
+      req.body.user_location,
+      req.body.user_phoneno,
+      req.body.user_id,
+      product.name,
+      product.image_url,
+      product.displayedPrice,
+      'Paid',
+      'Pending',
+      2,
+    ];
 
-  db.query(query, values, (err, results) => {
-    if (err) {
-      console.error('Error inserting data: ' + err);
-      res.status(500).json({ message: 'Error inserting data' });
-    } else {
-      res.status(200).json({ message: 'Data inserted successfully' });
-    }
+    // Execute the SQL query for each product
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.log(err);
+        errorOccurred = true;
+        res.status(500).json({ error: "Your order is not Confirmed" });
+        return; // Exit the loop if there's an error
+      }
+
+      // Push a success response for this product
+      successResponses.push({ message: "Product added successfully" });
+      
+      // If all products are processed, return success
+      if (successResponses.length === products.length && !errorOccurred) {
+        res.json({ message: "Your Order is being processed" });
+      }
+    });
   });
 });
 
 
+app.post("/seller",(req,res)=>{
+  const sql ="INSERT INTO `seller`(`seller_name`, `seller_email`, `seller_phoneno`, `seller_location`) VALUES (?,?,?,?)";
+  const values=[
+    req.body.seller_name,
+    req.body.seller_email,
+    req.body.seller_phoneno,
+    req.body.seller_location,
+  ]
+  db.query(sql,values,(err, result) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "Error adding Order." });
+    } else {
+      res.json({ message: "Seller  added successfully." });
+    }
+  })
+})
+
+app.get('/seller',(req,res)=>{
+  db.query('SELECT * FROM `seller`' ,(err,result,fields)=>{
+    if(err){
+      throw err;
+    }
+    else{
+      res.send(result)
+    }
+  })
+})
 app.get("/order", (req, res) => {
   db.query("SELECT * FROM `orderspage`  ", (err, result, fields) => {
     if (err) {
