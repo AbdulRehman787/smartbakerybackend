@@ -4,6 +4,7 @@ const multer = require("multer");
 const mysql = require("mysql");
 const path = require("path");
 const cors = require("cors");
+const nodemailer = require("nodemailer")
 const stripe = require("stripe")(
   "sk_test_51N29LQHV5zgJG4s6CKlofe5VYVjWjkIxo3uSRPJ7ubyOboOdxYCb5VQSh7nco3m8rjHI0IpgPesjDMA3Xed7DjkS00HGs8cVR0"
 );
@@ -293,6 +294,57 @@ app.get("/documents", (req, res) => {
     }
   });
 });
+
+
+app.post("/email",(req,res)=>{
+const {email} = req.body;
+      var transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "naqiraza199@gmail.com",
+            pass: "vzrjevlvrmigxduy",
+          },
+        });
+        var mailOptions = {
+          from: "a.rehman78766@gmail.com",
+          to: email,
+          subject: "Sending Email using Node.js",
+          text: "That was easy!",
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+  })
+
+
+app.post('/seller_email',(req,res)=>{
+  const {email} = req.body;
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "naqiraza199@gmail.com",
+      pass: "vzrjevlvrmigxduy",
+    },
+  });
+  var mailOptions = {
+    from: "a.rehman78766@gmail.com",
+    to: email,
+    subject: "Sending Email using Node.js",
+    text: "That was easy!",
+  };
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+})
+
 
 app.post("/add-product", (req, res) => {
   const { name, price, sell_price, productStatus, stock, image_url } = req.body;
