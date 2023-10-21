@@ -32,41 +32,29 @@ db.connect(function (err) {
   console.log("Database connected");
 });
 app.post("/register", (req, res) => {
-  const email = req.body.email;
-  const checkEmailQuery = "SELECT * FROM `signup` WHERE email = ?";
-  
-  db.query(checkEmailQuery, [email], (err, result) => {
+
+  const sql =
+    "INSERT INTO `signup`(`name`, `email`, `phoneno`, `address`, `password`, `status`) VALUES (?,?,?,?,?,?)";
+  const values = [
+    req.body.name,
+    req.body.email,
+    req.body.phoneno,
+    req.body.address,
+    req.body.password,
+    req.body.status,
+  ];
+
+  db.query(sql, values, (err) => {
     if (err) {
-      console.error("Error checking email registration:", err);
+      console.error("Error registering user:", err);
       return res.status(500).json({ message: "Internal server error" });
     }
-    
-    if (result.length > 0) {
-      // Email is already registered
-      return res.status(400).json({ message: "Email is already registered" });
-    } else {
-      // Email is not registered; proceed with registration
-      const sql =
-        "INSERT INTO `signup`(`name`, `email`, `phoneno`, `address`, `password`) VALUES (?,?,?,?,?)";
-      const values = [
-        req.body.name,
-        req.body.email,
-        req.body.phoneno,
-        req.body.address,
-        req.body.password,
-      ];
-      
-      db.query(sql, values, (err) => {
-        if (err) {
-          console.error("Error registering user:", err);
-          return res.status(500).json({ message: "Internal server error" });
-        }
-        
-        return res.status(200).json({ message: "User registered successfully" });
-      });
-    }
+
+    return res.status(200).json({ message: "User registered successfully" });
   });
-});
+}
+
+);
 
 // user signin code start end point
 
@@ -109,7 +97,7 @@ app.post("/login", (req, res) => {
         res.send("Wrong username / password combination");
       }
     }
-  );  
+  );
 });
 // Login user account end point
 
@@ -257,12 +245,12 @@ app.use(express.static('documents'));
 app.post('/documentsimg', upload1.single('file'), (req, res) => {
   // Image is saved in the 'documents' folder
   console.log('Image saved:', req.file);
-  
+
   // Send a success response
   res.status(200).json({ message: 'Image uploaded successfully' });
 });
 
-  
+
 app.post("/upload", upload.single("image"), (req, res) => {
   const { filename } = req.file;
   res.json({ imagePath: `${filename}` });
@@ -296,33 +284,8 @@ app.get("/documents", (req, res) => {
 });
 
 
-app.post("/email",(req,res)=>{
-const {email} = req.body;
-      var transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "naqiraza199@gmail.com",
-            pass: "vzrjevlvrmigxduy",
-          },
-        });
-        var mailOptions = {
-          from: "a.rehman78766@gmail.com",
-          to: email,
-          subject: "Sending Email using Node.js",
-          text: "That was easy!",
-        };
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
-        });
-  })
-
-
-app.post('/seller_email',(req,res)=>{
-  const {email} = req.body;
+app.post("/email", (req, res) => {
+  const { email } = req.body;
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -330,6 +293,31 @@ app.post('/seller_email',(req,res)=>{
       pass: "vzrjevlvrmigxduy",
     },
   });
+  var mailOptions = {
+    from: "a.rehman78766@gmail.com",
+    to: email,
+    subject: "Sending Email using Node.js",
+    text: "That was easy!",
+  };
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+})
+
+app.post('/seller_email', (req, res) => {
+  const { email } = req.body;
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "naqiraza199@gmail.com",
+      pass: "vzrjevlvrmigxduy",
+    },
+  });
+  
   var mailOptions = {
     from: "a.rehman78766@gmail.com",
     to: email,
@@ -372,69 +360,95 @@ app.get("/add-product", (req, res) => {
     }
   });
 });
-app.post("/order", (req, res) => {
-  // Assuming req.body.products is an array of products with name and quantity properties
-  const products = req.body.products;
-  console.log(products)
 
-  if (!products || !Array.isArray(products) || products.length === 0) {
-    return res.status(400).json({ error: "Invalid or empty products array" });
-  }
+app.post('/order', (req, res) => {
+  const {
+    user_name,
+    user_email,
+    products_name,
+    product_image_url,
+    product_price,
+    paymentStatus,
+    user_location,
+    quantity,
+    user_phoneno,
+    user_id,
+    orderStatus,
+    seller_email
+  } = req.body;
+  
+  // Convert arrays to JSON strings
+  const productImageJSON = JSON.stringify(product_image_url);
+  const productPriceJSON = JSON.stringify(product_price);
+  const productsNameJSON = JSON.stringify(products_name);
+  const quantityJSON = JSON.stringify(quantity);
 
-  // Prepare the SQL query
-  const sql =
-    "INSERT INTO `orderspage`(`user_name`, `user_email`, `user_location`, `user_phoneno`, `user_id`, `products_name`, `product_image_url`, `product_price`, `paymentStatus`, `orderStatus`,  `attribute_name`)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  const query = `
+    INSERT INTO orderspage
+    (user_name, user_email, products_name, product_image_url, product_price, paymentStatus, user_location, quantity, user_phoneno, user_id, orderStatus, seller_email)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  const successResponses = [];
-  const errorOccurred = false;
+  const values = [
+    user_name,
+    user_email,
+    productsNameJSON,
+    productImageJSON,
+    productPriceJSON,
+    paymentStatus,
+    user_location, 
+    quantityJSON,
+    user_phoneno,
+    user_id,
+    orderStatus,
+    seller_email
+  ];
 
- 
-  products.forEach(product => {
-    const values = [
-      req.body.user_name,
-      req.body.user_email,
-      req.body.user_location,
-      req.body.user_phoneno,
-      req.body.user_id,
-      product.name,
-      product.image_url,
-      product.displayedPrice,
-      'Paid',
-      'Pending',
-      2,
-    ];
-
-    // Execute the SQL query for each product
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.log(err);
-        errorOccurred = true;
-        res.status(500).json({ error: "Your order is not Confirmed" });
-        return; // Exit the loop if there's an error
-      }
-
-      // Push a success response for this product
-      successResponses.push({ message: "Product added successfully" });
-      
-      // If all products are processed, return success
-      if (successResponses.length === products.length && !errorOccurred) {
-        res.json({ message: "Your Order is being processed" });
-      }
-    });
+  db.query(query, values, (err, results) => {
+    if (err) {
+      console.error('Error inserting data: ' + err);
+      res.status(500).json({ message: 'Error inserting data' });
+    } else {
+      res.status(200).json({ message: 'Data inserted successfully' });
+    }
   });
 });
 
+app.post('/seller-emails',(req,res)=>{
+  const sellerEmail = req.body.selectedSellerEmail;
+  console.log(sellerEmail)
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "naqiraza199@gmail.com",
+      pass: "vzrjevlvrmigxduy",
+    },
+  }); // Use the selected seller's email from the request
+    const mailOptions = {
+      from: 'a.rehman78766@gmail.com',
+      to: sellerEmail,
+      subject: 'New Order Received',
+      text: 'You have received a new order. Please check your dashboard for details.',
+    };
+    // Send an email to the seller
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+})
 
-app.post("/seller",(req,res)=>{
-  const sql ="INSERT INTO `seller`(`seller_name`, `seller_email`, `seller_phoneno`, `seller_location`, `seller_city`) VALUES (?,?,?,?,?)";
-  const values=[
+app.post("/seller", (req, res) => {
+  const sql = "INSERT INTO `seller`(`seller_name`, `seller_email`, `seller_phoneno`, `seller_location`, `seller_city`) VALUES (?,?,?,?,?)";
+  const values = [
     req.body.seller_name,
     req.body.seller_email,
     req.body.seller_phoneno,
     req.body.seller_location,
     req.body.seller_city,
   ]
-  db.query(sql,values,(err, result) => {
+  db.query(sql, values, (err, result) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: "Error adding Order." });
@@ -444,12 +458,12 @@ app.post("/seller",(req,res)=>{
   })
 })
 
-app.get('/seller',(req,res)=>{
-  db.query('SELECT * FROM `seller`' ,(err,result,fields)=>{
-    if(err){
+app.get('/seller', (req, res) => {
+  db.query('SELECT * FROM `seller`', (err, result, fields) => {
+    if (err) {
       throw err;
     }
-    else{
+    else {
       res.send(result)
     }
   })
